@@ -2,7 +2,6 @@
 const express = require("express");
 const http = require("http");
 const path = require("path");
-
 const app = express();
 
 let port = 3001;
@@ -19,23 +18,29 @@ app.get("/", (req, res) => {
 	res.sendFile(path.join(__dirname, "/public/index.html"));
 });
 
-// Request handler
-const options = {
-	host: "localhost",
-	path: "/",
-	port: "3000",
-	method: "POST",
-};
-
 app.post("/", (req, res) => {
-	var sendRequest = http.request(options, (res) => {
-		console.log("Status: " + res.statusCode);
-		console.log("Headers: " + JSON.stringify(res.headers));
-	});
+	// API test
+	fetch("http://api.coindesk.com/v1/bpi/currentprice.json", {
+		method: "GET",
+	})
+		.then((response) => response.json())
+		.then((body) =>
+			fetch("http://localhost:3000/", {
+				method: "post",
+				headers: {
+					Accept: "application/json",
+					"Content-Type": "application/json",
+				},
 
-	sendRequest.on("error", (error) => {
-		console.log(error);
-	});
-
-	req.write('{ "key": "' + req.body.key + '" }');
+				body: JSON.stringify({
+					key: req.body.key,
+					USD: body.bpi.USD.rate,
+					GBP: body.bpi.GBP.rate,
+					EUR: body.bpi.EUR.rate,
+				}),
+			}).then((response) => {
+				console.log(response);
+				res.redirect(response.url);
+			})
+		);
 });
