@@ -24,7 +24,7 @@ app.post("/", (req, res) => {
 		method: "GET",
 	})
 		.then((response) => response.json())
-		.then((body) =>
+		.then((body) => {
 			fetch("http://localhost:3000/", {
 				method: "post",
 				headers: {
@@ -38,9 +38,13 @@ app.post("/", (req, res) => {
 					GBP: body.bpi.GBP.rate,
 					EUR: body.bpi.EUR.rate,
 				}),
-			}).then((response) => {
-				console.log(response);
-				res.redirect(response.url);
 			})
-		);
+				.then((response) => {
+					if (response.ok) {
+						res.redirect(response.url);
+					} else
+						throw new Error("Connection refused. Is the Main App running?");
+				})
+				.catch((error) => console.log(`ERROR: ${error}`));
+		});
 });
